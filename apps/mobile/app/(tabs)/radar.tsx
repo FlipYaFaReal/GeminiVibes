@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { DomainCard } from "../../components/DomainCard";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 
 const FALLBACK_DOMAINS = [
