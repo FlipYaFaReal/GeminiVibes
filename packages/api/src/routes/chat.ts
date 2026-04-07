@@ -59,16 +59,26 @@ export const chatRouter = router({
         };
       }
 
-      // Call Claude and execute tool calls
+      // Call Claude with inline tool execution so it can respond after tool use
+      const toolResults: Array<{ success: boolean; type: string; id?: string; error?: string }> = [];
       let aiResponse;
       try {
-        aiResponse = await chat(conversationMessages, {
-          userName: "Paul", // TODO: fetch from user record
-          currentDateTime: new Date().toISOString(),
-          upcomingEvents,
-          recentNudges: [], // TODO: fetch recent nudges
-          domainHealth: domainHealthMap,
-        });
+        aiResponse = await chat(
+          conversationMessages,
+          {
+            userName: "Paul",
+            currentDateTime: new Date().toISOString(),
+            upcomingEvents,
+            recentNudges: [],
+            domainHealth: domainHealthMap,
+          },
+          // Tool executor callback — called by AI service during tool_use loop
+          async (toolCall) => {
+            const result = await executeToolCall(toolCall, userId, db);
+            toolResults.push(result);
+            return result;
+          },
+        );
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Unknown AI service error";
@@ -77,19 +87,6 @@ export const chatRouter = router({
           toolResults: [],
           error: message,
         };
-      }
-
-      // Execute any tool calls
-      const toolResults = [];
-      try {
-        for (const toolCall of aiResponse.toolCalls) {
-          const result = await executeToolCall(toolCall, userId, db);
-          toolResults.push(result);
-        }
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : "Unknown tool execution error";
-        toolResults.push({ success: false, type: "execution", error: message });
       }
 
       // Store assistant response

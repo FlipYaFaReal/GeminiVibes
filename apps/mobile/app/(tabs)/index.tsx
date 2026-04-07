@@ -6,7 +6,7 @@ import {
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatInput } from "@/components/ChatInput";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, UserButton } from "@clerk/clerk-react";
 import { colors } from "@/lib/theme";
 
 interface Message {
@@ -78,8 +78,13 @@ export default function ChatScreen() {
         keyboardVerticalOffset={90}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>GeminiVibes</Text>
-          <Text style={styles.headerSubtitle}>Your cosmic life copilot</Text>
+          <View style={styles.headerRow}>
+            <View>
+              <Text style={styles.headerTitle}>GeminiVibes</Text>
+              <Text style={styles.headerSubtitle}>Your cosmic life copilot</Text>
+            </View>
+            <UserButton />
+          </View>
         </View>
 
         <FlatList
@@ -103,6 +108,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.surfaceBright },
+  headerRow: { flexDirection: "row" as const, justifyContent: "space-between" as const, alignItems: "center" as const },
   headerTitle: { fontSize: 24, fontWeight: "700", color: colors.primary },
   headerSubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
   messageList: { paddingVertical: 12 },
