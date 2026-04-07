@@ -1,0 +1,7 @@
+node_modules
+dist
+.expo
+.turbo
+apps/mobile
+*.env
+.git
