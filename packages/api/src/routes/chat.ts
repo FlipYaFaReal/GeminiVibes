@@ -1,0 +1,94 @@
+import { z } from "zod";
+import { router, publicProcedure } from "../trpc";
+import { chat } from "../services/ai";
+import { executeToolCall } from "../services/tool-executor";
+import { db } from "../db";
+import { messages as messagesTable } from "../db/schema";
+import { eq, desc } from "drizzle-orm";
+
+export const chatRouter = router({
+  send: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        message: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // Store user message
+      await db.insert(messagesTable).values({
+        userId: input.userId,
+        role: "user",
+        content: input.message,
+      });
+
+      // Fetch recent conversation history (last 15 messages)
+      const history = await db
+        .select()
+        .from(messagesTable)
+        .where(eq(messagesTable.userId, input.userId))
+        .orderBy(desc(messagesTable.createdAt))
+        .limit(15);
+
+      const conversationMessages = history.reverse().map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+
+      // Call Claude
+      const aiResponse = await chat(conversationMessages, {
+        userName: "Paul", // TODO: fetch from user record
+        currentDateTime: new Date().toISOString(),
+        upcomingEvents: [], // TODO: fetch from calendar
+        recentNudges: [], // TODO: fetch recent nudges
+        domainHealth: {
+          family: "active",
+          work: "active",
+          home: "active",
+          relationships: "unknown",
+          faith: "unknown",
+          health: "unknown",
+          growth: "unknown",
+        },
+      });
+
+      // Execute any tool calls
+      const toolResults = [];
+      for (const toolCall of aiResponse.toolCalls) {
+        const result = await executeToolCall(toolCall, input.userId, db);
+        toolResults.push(result);
+      }
+
+      // Store assistant response
+      await db.insert(messagesTable).values({
+        userId: input.userId,
+        role: "assistant",
+        content: aiResponse.text,
+        toolCalls:
+          aiResponse.toolCalls.length > 0 ? aiResponse.toolCalls : undefined,
+      });
+
+      return {
+        text: aiResponse.text,
+        toolResults,
+      };
+    }),
+
+  history: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        limit: z.number().min(1).max(100).default(50),
+      }),
+    )
+    .query(async ({ input }) => {
+      const history = await db
+        .select()
+        .from(messagesTable)
+        .where(eq(messagesTable.userId, input.userId))
+        .orderBy(desc(messagesTable.createdAt))
+        .limit(input.limit);
+
+      return history.reverse();
+    }),
+});
