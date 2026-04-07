@@ -1,6 +1,8 @@
 import { router, publicProcedure } from "./trpc";
 import { chatRouter } from "./routes/chat";
 import { authRouter } from "./routes/auth";
+import { domainsRouter } from "./routes/domains";
+import { todayRouter } from "./routes/today";
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -8,6 +10,8 @@ export const appRouter = router({
   }),
   chat: chatRouter,
   auth: authRouter,
+  domains: domainsRouter,
+  today: todayRouter,
 });
 
 export type AppRouter = typeof appRouter;

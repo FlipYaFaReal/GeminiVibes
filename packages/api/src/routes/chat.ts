@@ -3,6 +3,7 @@ import { router, publicProcedure } from "../trpc";
 import { chat } from "../services/ai";
 import { executeToolCall } from "../services/tool-executor";
 import { getUpcomingEvents } from "../services/google-calendar";
+import { computeDomainHealth } from "../services/domain-health";
 import { db } from "../db";
 import { messages as messagesTable } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -39,6 +40,21 @@ export const chatRouter = router({
       // Fetch upcoming Google Calendar events (best-effort)
       const upcomingEvents = await getUpcomingEvents(input.userId);
 
+      // Compute real domain health from life item activity
+      let domainHealthMap: Record<string, string> = {};
+      try {
+        const healthResults = await computeDomainHealth(input.userId);
+        for (const h of healthResults) {
+          domainHealthMap[h.domain] = h.status === "healthy" ? "active" : h.status;
+        }
+      } catch {
+        // Fall back to unknown if domain health computation fails
+        domainHealthMap = {
+          family: "unknown", work: "unknown", home: "unknown",
+          relationships: "unknown", faith: "unknown", health: "unknown", growth: "unknown",
+        };
+      }
+
       // Call Claude and execute tool calls
       let aiResponse;
       try {
@@ -47,15 +63,7 @@ export const chatRouter = router({
           currentDateTime: new Date().toISOString(),
           upcomingEvents,
           recentNudges: [], // TODO: fetch recent nudges
-          domainHealth: {
-            family: "active",
-            work: "active",
-            home: "active",
-            relationships: "unknown",
-            faith: "unknown",
-            health: "unknown",
-            growth: "unknown",
-          },
+          domainHealth: domainHealthMap,
         });
       } catch (err: unknown) {
         const message =

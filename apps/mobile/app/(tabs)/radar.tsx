@@ -1,21 +1,30 @@
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { DomainCard } from "../../components/DomainCard";
 import { useAuth } from "@/lib/AuthContext";
+import { trpc } from "@/lib/trpc";
 
-const MOCK_DOMAINS = [
-  { domain: "family", status: "healthy" as const, lastActivity: "Today", itemCount: 12 },
-  { domain: "work", status: "healthy" as const, lastActivity: "Today", itemCount: 8 },
-  { domain: "faith", status: "neglected" as const, lastActivity: "12 days ago", itemCount: 2 },
-  { domain: "home", status: "drifting" as const, lastActivity: "3 days ago", itemCount: 5 },
-  { domain: "relationships", status: "drifting" as const, lastActivity: "5 days ago", itemCount: 3 },
-  { domain: "health", status: "neglected" as const, lastActivity: "8 days ago", itemCount: 1 },
-  { domain: "growth", status: "unknown" as const, lastActivity: undefined, itemCount: 0 },
+const FALLBACK_DOMAINS = [
+  { domain: "family", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "work", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "faith", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "home", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "relationships", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "health", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
+  { domain: "growth", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
 ];
 
 export default function RadarScreen() {
-  const { signOut } = useAuth();
-  const healthyCount = MOCK_DOMAINS.filter((d) => d.status === "healthy").length;
-  const needsAttention = MOCK_DOMAINS.filter(
+  const { signOut, userId } = useAuth();
+
+  const { data: domains, isLoading, isError } = trpc.domains.health.useQuery(
+    { userId: userId! },
+    { enabled: !!userId },
+  );
+
+  const displayDomains = domains ?? FALLBACK_DOMAINS;
+
+  const healthyCount = displayDomains.filter((d) => d.status === "healthy").length;
+  const needsAttention = displayDomains.filter(
     (d) => d.status === "neglected" || d.status === "drifting"
   ).length;
 
@@ -33,9 +42,15 @@ export default function RadarScreen() {
             {healthyCount} domains healthy — {needsAttention} need attention
           </Text>
         </View>
+        {isLoading && (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="#6B7280" />
+            <Text style={styles.loadingText}>Loading domain health...</Text>
+          </View>
+        )}
         <View style={styles.grid}>
-          {MOCK_DOMAINS.map((d) => (
-            <DomainCard key={d.domain} {...d} />
+          {displayDomains.map((d) => (
+            <DomainCard key={d.domain} domain={d.domain} status={d.status} lastActivity={d.lastActivity ?? undefined} itemCount={d.itemCount} />
           ))}
         </View>
       </ScrollView>
@@ -52,6 +67,8 @@ const styles = StyleSheet.create({
   signOutButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: "#F3F4F6" },
   signOutText: { fontSize: 14, fontWeight: "600", color: "#EF4444" },
   subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
+  loading: { alignItems: "center", paddingVertical: 32 },
+  loadingText: { fontSize: 14, color: "#9CA3AF", marginTop: 8 },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
