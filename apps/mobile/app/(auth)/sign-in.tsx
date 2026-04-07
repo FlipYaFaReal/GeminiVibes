@@ -1,6 +1,76 @@
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
+import { useRouter } from "expo-router";
+
+import { trpc } from "@/lib/trpc";
+import { setToken } from "@/lib/auth";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen() {
+  const router = useRouter();
+  const [signingIn, setSigningIn] = useState(false);
+  const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
+
+  const googleCallback = trpc.auth.googleCallback.useMutation();
+
+  const redirectUri = AuthSession.makeRedirectUri();
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
+      redirectUri,
+      scopes: [
+        "openid",
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/calendar",
+      ],
+      responseType: "code",
+      usePKCE: true,
+    },
+    discovery,
+  );
+
+  useEffect(() => {
+    if (response?.type !== "success") return;
+
+    const { code } = response.params;
+    const codeVerifier = request?.codeVerifier;
+
+    if (!code || !codeVerifier) {
+      Alert.alert("Sign-in failed", "Missing authorization code or verifier.");
+      return;
+    }
+
+    setSigningIn(true);
+
+    googleCallback
+      .mutateAsync({ code, codeVerifier })
+      .then(async (result) => {
+        await setToken(result.token);
+        router.replace("/(tabs)");
+      })
+      .catch((err: unknown) => {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred.";
+        Alert.alert("Sign-in failed", message);
+      })
+      .finally(() => {
+        setSigningIn(false);
+      });
+  }, [response]);
+
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
@@ -13,8 +83,16 @@ export default function SignInScreen() {
           <Text style={styles.feature}>See your whole life at a glance</Text>
         </View>
 
-        <TouchableOpacity style={styles.googleButton}>
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
+        <TouchableOpacity
+          style={[styles.googleButton, (!request || signingIn) && styles.googleButtonDisabled]}
+          disabled={!request || signingIn}
+          onPress={() => promptAsync()}
+        >
+          {signingIn ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.disclaimer}>
@@ -39,6 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4F46E5", paddingHorizontal: 32, paddingVertical: 16,
     borderRadius: 12, width: "100%", alignItems: "center",
   },
+  googleButtonDisabled: { opacity: 0.5 },
   googleButtonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "600" },
   disclaimer: { fontSize: 12, color: "#9CA3AF", textAlign: "center", marginTop: 24, lineHeight: 18 },
 });
