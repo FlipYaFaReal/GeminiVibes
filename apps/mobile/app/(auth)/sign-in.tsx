@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,67 +8,31 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-
-import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/lib/AuthContext";
+import { useOAuth } from "@clerk/clerk-expo";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen() {
-  const { signIn } = useAuth();
+  const { startOAuthFlow } = useOAuth({ strategy: "oauth_google" });
   const [signingIn, setSigningIn] = useState(false);
-  const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
 
-  const googleCallback = trpc.auth.googleCallback.useMutation();
-
-  const redirectUri = AuthSession.makeRedirectUri();
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!,
-      redirectUri,
-      scopes: [
-        "openid",
-        "profile",
-        "email",
-        "https://www.googleapis.com/auth/calendar",
-      ],
-      responseType: "code",
-      usePKCE: true,
-    },
-    discovery,
-  );
-
-  useEffect(() => {
-    if (response?.type !== "success") return;
-
-    const { code } = response.params;
-    const codeVerifier = request?.codeVerifier;
-
-    if (!code || !codeVerifier) {
-      Alert.alert("Sign-in failed", "Missing authorization code or verifier.");
-      return;
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      setSigningIn(true);
+      const { createdSessionId, setActive } = await startOAuthFlow();
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      Alert.alert("Sign-in failed", message);
+      console.error("OAuth error:", err);
+    } finally {
+      setSigningIn(false);
     }
-
-    setSigningIn(true);
-
-    googleCallback
-      .mutateAsync({ code, codeVerifier })
-      .then(async (result) => {
-        const payload = JSON.parse(atob(result.token.split(".")[1]));
-        await signIn(result.token, payload.userId);
-      })
-      .catch((err: unknown) => {
-        const message =
-          err instanceof Error ? err.message : "An unexpected error occurred.";
-        Alert.alert("Sign-in failed", message);
-      })
-      .finally(() => {
-        setSigningIn(false);
-      });
-  }, [response]);
+  }, [startOAuthFlow]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -83,9 +47,9 @@ export default function SignInScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.googleButton, (!request || signingIn) && styles.googleButtonDisabled]}
-          disabled={!request || signingIn}
-          onPress={() => promptAsync()}
+          style={[styles.googleButton, signingIn && styles.googleButtonDisabled]}
+          disabled={signingIn}
+          onPress={handleGoogleSignIn}
         >
           {signingIn ? (
             <ActivityIndicator color="#FFFFFF" />

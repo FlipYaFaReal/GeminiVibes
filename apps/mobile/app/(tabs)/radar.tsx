@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { DomainCard } from "../../components/DomainCard";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@clerk/clerk-expo";
 import { trpc } from "@/lib/trpc";
 
 const FALLBACK_DOMAINS = [
@@ -34,7 +34,7 @@ export default function RadarScreen() {
         <View style={styles.header}>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Life Radar</Text>
-            <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
+            <TouchableOpacity onPress={() => signOut()} style={styles.signOutButton}>
               <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
           </View>

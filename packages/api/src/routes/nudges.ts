@@ -7,7 +7,7 @@ import { eq, and } from "drizzle-orm";
 export const nudgesRouter = router({
   /** Fetch undelivered nudges for a user and mark them as delivered. */
   pending: publicProcedure
-    .input(z.object({ userId: z.string().uuid() }))
+    .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
       const pending = await db
         .select()
@@ -44,7 +44,7 @@ export const nudgesRouter = router({
   registerPushToken: publicProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: z.string(),
         pushToken: z.string(),
       }),
     )

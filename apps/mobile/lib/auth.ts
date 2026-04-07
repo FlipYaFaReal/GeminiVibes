@@ -1,27 +1,30 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
+import type { TokenCache } from "@clerk/clerk-expo";
 
-const TOKEN_KEY = "lifepulse_token";
+const createTokenCache = (): TokenCache => {
+  return {
+    getToken: async (key: string) => {
+      if (Platform.OS === "web") {
+        return localStorage.getItem(key);
+      }
+      return SecureStore.getItemAsync(key);
+    },
+    saveToken: async (key: string, token: string) => {
+      if (Platform.OS === "web") {
+        localStorage.setItem(key, token);
+      } else {
+        await SecureStore.setItemAsync(key, token);
+      }
+    },
+    clearToken: async (key: string) => {
+      if (Platform.OS === "web") {
+        localStorage.removeItem(key);
+      } else {
+        await SecureStore.deleteItemAsync(key);
+      }
+    },
+  };
+};
 
-export async function getToken(): Promise<string | null> {
-  if (Platform.OS === "web") {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-  return SecureStore.getItemAsync(TOKEN_KEY);
-}
-
-export async function setToken(token: string): Promise<void> {
-  if (Platform.OS === "web") {
-    localStorage.setItem(TOKEN_KEY, token);
-  } else {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
-  }
-}
-
-export async function clearToken(): Promise<void> {
-  if (Platform.OS === "web") {
-    localStorage.removeItem(TOKEN_KEY);
-  } else {
-    await SecureStore.deleteItemAsync(TOKEN_KEY);
-  }
-}
+export const tokenCache = createTokenCache();

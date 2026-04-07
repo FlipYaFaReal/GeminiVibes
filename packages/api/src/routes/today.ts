@@ -6,7 +6,7 @@ import { eq, and, gte, lte, or } from "drizzle-orm";
 
 export const todayRouter = router({
   items: publicProcedure
-    .input(z.object({ userId: z.string().uuid() }))
+    .input(z.object({ userId: z.string() }))
     .query(async ({ input }) => {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);

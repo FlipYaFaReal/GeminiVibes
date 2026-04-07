@@ -1,17 +1,29 @@
-import { describe, it, expect } from "vitest";
-import { verifyToken, createToken } from "../services/auth";
+import { describe, it, expect, vi } from "vitest";
 
-describe("Auth service", () => {
-  it("creates and verifies a JWT token", async () => {
-    const token = await createToken({ userId: "test-user-id", email: "test@example.com" });
-    expect(typeof token).toBe("string");
+// Mock @clerk/backend before importing the module under test
+vi.mock("@clerk/backend", () => ({
+  verifyToken: vi.fn(async (token: string) => {
+    if (token === "valid-clerk-token") {
+      return {
+        sub: "user_abc123",
+        email: "test@example.com",
+      };
+    }
+    throw new Error("Invalid token");
+  }),
+  createClerkClient: () => ({}),
+}));
 
-    const payload = await verifyToken(token);
-    expect(payload.userId).toBe("test-user-id");
+import { verifyClerkToken } from "../services/auth";
+
+describe("Auth service (Clerk)", () => {
+  it("verifies a valid Clerk token and returns userId and email", async () => {
+    const payload = await verifyClerkToken("valid-clerk-token");
+    expect(payload.userId).toBe("user_abc123");
     expect(payload.email).toBe("test@example.com");
   });
 
   it("rejects invalid tokens", async () => {
-    await expect(verifyToken("invalid-token")).rejects.toThrow();
+    await expect(verifyClerkToken("invalid-token")).rejects.toThrow("Invalid token");
   });
 });

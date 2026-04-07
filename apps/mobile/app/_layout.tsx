@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,10 +10,13 @@ import type { EventSubscription } from 'expo-modules-core';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
+import { tokenCache } from '@/lib/auth';
 import { useColorScheme } from '@/components/useColorScheme';
-import { trpc, trpcClient } from '@/lib/trpc';
-import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { trpc, createTRPCClient } from '@/lib/trpc';
 import { registerForPushNotifications } from '@/lib/notifications';
+
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,11 +52,17 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <RootLayoutNav />
+      </ClerkLoaded>
+    </ClerkProvider>
+  );
 }
 
 function AuthGate() {
-  const { token, userId, isLoading } = useAuth();
+  const { isSignedIn, isLoaded, userId } = useAuth();
   const segments = useSegments();
   const router = useRouter();
   const notificationResponseListener = useRef<EventSubscription | null>(null);
@@ -61,27 +70,27 @@ function AuthGate() {
 
   // Auth-based routing
   useEffect(() => {
-    if (isLoading) return;
+    if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (!token && !inAuthGroup) {
+    if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");
-    } else if (token && inAuthGroup) {
+    } else if (isSignedIn && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [token, isLoading, segments]);
+  }, [isSignedIn, isLoaded, segments]);
 
   // Register for push notifications once authenticated
   useEffect(() => {
-    if (!token || !userId) return;
+    if (!isSignedIn || !userId) return;
 
     registerForPushNotifications().then((pushToken) => {
       if (pushToken) {
         registerPushToken.mutate({ userId, pushToken });
       }
     });
-  }, [token, userId]);
+  }, [isSignedIn, userId]);
 
   // Handle notification taps to navigate to the relevant screen
   useEffect(() => {
@@ -102,7 +111,7 @@ function AuthGate() {
     };
   }, []);
 
-  if (isLoading) {
+  if (!isLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#4F46E5" />
@@ -123,15 +132,16 @@ function AuthGate() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const [queryClient] = useState(() => new QueryClient());
+  const { getToken } = useAuth();
+
+  const trpcClient = useMemo(() => createTRPCClient(getToken), [getToken]);
 
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AuthGate />
-          </ThemeProvider>
-        </AuthProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <AuthGate />
+        </ThemeProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );

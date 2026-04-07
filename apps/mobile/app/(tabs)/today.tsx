@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { TimelineItem } from "../../components/TimelineItem";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@clerk/clerk-expo";
 
 const MOCK_TODAY = [
   { time: "8:00", title: "Morning devotional", domain: "faith", type: "event" as const },

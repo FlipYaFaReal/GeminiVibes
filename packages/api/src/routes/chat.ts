@@ -12,7 +12,7 @@ export const chatRouter = router({
   send: publicProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: z.string(),
         message: z.string().min(1),
       }),
     )
@@ -106,7 +106,7 @@ export const chatRouter = router({
   history: publicProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: z.string(),
         limit: z.number().min(1).max(100).default(50),
       }),
     )

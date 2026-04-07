@@ -6,7 +6,7 @@ import {
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatInput } from "@/components/ChatInput";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/lib/AuthContext";
+import { useAuth } from "@clerk/clerk-expo";
 
 interface Message {
   id: string;

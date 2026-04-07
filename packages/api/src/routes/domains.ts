@@ -6,7 +6,7 @@ export const domainsRouter = router({
   health: publicProcedure
     .input(
       z.object({
-        userId: z.string().uuid(),
+        userId: z.string(),
       }),
     )
     .query(async ({ input }) => {
