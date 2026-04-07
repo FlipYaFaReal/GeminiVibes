@@ -1,4 +1,5 @@
 import { createApp } from "./app";
+import { startCronJobs } from "./cron";
 
 async function main() {
   const app = await createApp();
@@ -6,6 +7,8 @@ async function main() {
   const port = Number(process.env.PORT ?? 3000);
   await app.listen({ host, port });
   console.log(`LifePulse API running on http://${host}:${port}`);
+
+  startCronJobs();
 }
 
 main().catch(console.error);
