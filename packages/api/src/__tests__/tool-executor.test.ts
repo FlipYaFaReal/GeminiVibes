@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { executeToolCall } from "../services/tool-executor";
+import { lifeItems, nudges } from "../db/schema";
 
 describe("Tool executor", () => {
   it("handles create_task tool call", async () => {
@@ -27,6 +28,8 @@ describe("Tool executor", () => {
 
     expect(result.success).toBe(true);
     expect(result.type).toBe("task");
+    expect(result.id).toBe("test-id");
+    expect(mockDb.insert.mock.calls[0][0]).toBe(lifeItems);
   });
 
   it("handles create_event tool call", async () => {
@@ -54,6 +57,8 @@ describe("Tool executor", () => {
 
     expect(result.success).toBe(true);
     expect(result.type).toBe("event");
+    expect(result.id).toBe("test-id");
+    expect(mockDb.insert.mock.calls[0][0]).toBe(lifeItems);
   });
 
   it("handles create_nudge tool call", async () => {
@@ -82,6 +87,8 @@ describe("Tool executor", () => {
 
     expect(result.success).toBe(true);
     expect(result.type).toBe("nudge");
+    expect(result.id).toBe("test-id");
+    expect(mockDb.insert.mock.calls[0][0]).toBe(nudges);
   });
 
   it("handles capture_note tool call", async () => {
@@ -108,6 +115,8 @@ describe("Tool executor", () => {
 
     expect(result.success).toBe(true);
     expect(result.type).toBe("note");
+    expect(result.id).toBe("test-id");
+    expect(mockDb.insert.mock.calls[0][0]).toBe(lifeItems);
   });
 
   it("handles unknown tool name", async () => {
@@ -118,5 +127,7 @@ describe("Tool executor", () => {
     );
 
     expect(result.success).toBe(false);
+    expect(result.type).toBe("unknown");
+    expect(result.error).toContain("Unknown tool");
   });
 });
