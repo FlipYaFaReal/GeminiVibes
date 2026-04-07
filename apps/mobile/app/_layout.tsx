@@ -16,7 +16,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { trpc, createTRPCClient } from '@/lib/trpc';
 import { registerForPushNotifications } from '@/lib/notifications';
 
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,6 +50,14 @@ export default function RootLayout() {
 
   if (!loaded) {
     return null;
+  }
+
+  if (!CLERK_PUBLISHABLE_KEY) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+      </View>
+    );
   }
 
   return (
