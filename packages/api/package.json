@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@fastify/cors": "^11.2.0",
     "@trpc/server": "^11.16.0",
     "arctic": "^3.7.0",
     "drizzle-orm": "^0.45.2",

@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatInput } from "@/components/ChatInput";
+import { trpc } from "@/lib/trpc";
 
 interface Message {
   id: string;
@@ -25,7 +26,31 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  const handleSend = useCallback(async (text: string) => {
+  const sendMutation = trpc.chat.send.useMutation({
+    onSuccess: (data) => {
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: data.text,
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+      setSending(false);
+    },
+    onError: (error) => {
+      console.error("Chat error:", error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "Sorry, I had trouble processing that. Please try again.",
+        createdAt: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      setSending(false);
+    },
+  });
+
+  const handleSend = useCallback((text: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -36,18 +61,11 @@ export default function ChatScreen() {
     setMessages((prev) => [...prev, userMessage]);
     setSending(true);
 
-    // TODO: Replace with tRPC mutation once auth is in place
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Got it — I'll keep track of that. (AI integration coming soon!)",
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setSending(false);
-    }, 500);
-  }, []);
+    sendMutation.mutate({
+      userId: "placeholder-user-id", // TODO: from auth context
+      message: text,
+    });
+  }, [sendMutation]);
 
   return (
     <SafeAreaView style={styles.safe}>
