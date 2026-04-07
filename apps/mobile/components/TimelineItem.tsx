@@ -1,0 +1,40 @@
+import { View, Text, StyleSheet } from "react-native";
+import { DomainBadge } from "./DomainBadge";
+
+interface TimelineItemProps {
+  time?: string;
+  title: string;
+  domain: string;
+  type: "event" | "task" | "reminder" | "note";
+  priority?: string;
+}
+
+export function TimelineItem({ time, title, domain, type, priority }: TimelineItemProps) {
+  return (
+    <View style={styles.container}>
+      <View style={styles.timeColumn}>
+        <Text style={styles.time}>{time ?? "--:--"}</Text>
+      </View>
+      <View style={styles.dot} />
+      <View style={styles.content}>
+        <Text style={[styles.title, priority === "high" && styles.highPriority]}>{title}</Text>
+        <View style={styles.meta}>
+          <DomainBadge domain={domain} size="small" />
+          <Text style={styles.type}>{type}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, paddingHorizontal: 16 },
+  timeColumn: { width: 52, alignItems: "flex-end", paddingRight: 12 },
+  time: { fontSize: 13, color: "#6B7280", fontWeight: "500", fontVariant: ["tabular-nums"] },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#4F46E5", marginTop: 5, marginRight: 12 },
+  content: { flex: 1 },
+  title: { fontSize: 16, color: "#1F2937", fontWeight: "500", marginBottom: 4 },
+  highPriority: { color: "#DC2626" },
+  meta: { flexDirection: "row", alignItems: "center", gap: 8 },
+  type: { fontSize: 12, color: "#9CA3AF", textTransform: "capitalize" },
+});
