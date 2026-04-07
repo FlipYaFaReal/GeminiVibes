@@ -1,0 +1,12 @@
+{
+  "name": "lifepulse",
+  "private": true,
+  "packageManager": "npm@11.8.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "turbo": "^2.9.4"
+  }
+}
