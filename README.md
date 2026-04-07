@@ -13,7 +13,7 @@ AI-native personal life command center. Conversational capture, proactive nudges
 ## Prerequisites
 
 - Node.js 20+
-- PostgreSQL 15+
+- Docker Desktop (for PostgreSQL)
 - Anthropic API key
 - Google Cloud project with OAuth 2.0 credentials
 
@@ -24,9 +24,14 @@ AI-native personal life command center. Conversational capture, proactive nudges
    npm install
    ```
 
-2. Set up the database:
+2. Start PostgreSQL via Docker Compose:
    ```bash
-   createdb lifepulse
+   docker compose up -d
+   ```
+   This starts a PostgreSQL 15 container on **port 5433** (to avoid conflicts with any local PostgreSQL on 5432). To stop it later:
+   ```bash
+   docker compose down        # stop containers (data persists)
+   docker compose down -v     # stop containers and delete data
    ```
 
 3. Configure environment variables:
