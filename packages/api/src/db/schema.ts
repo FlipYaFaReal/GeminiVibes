@@ -8,6 +8,7 @@ export const lifeDomainEnum = pgEnum("life_domain", [
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  clerkId: text("clerk_id").unique(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   googleAccessToken: text("google_access_token"),

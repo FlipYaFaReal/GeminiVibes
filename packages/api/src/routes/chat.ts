@@ -4,6 +4,7 @@ import { chat } from "../services/ai";
 import { executeToolCall } from "../services/tool-executor";
 import { getUpcomingEvents } from "../services/google-calendar";
 import { computeDomainHealth } from "../services/domain-health";
+import { resolveUserId } from "../services/user-resolver";
 import { db } from "../db";
 import { messages as messagesTable } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -17,9 +18,12 @@ export const chatRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
+      // Resolve Clerk user ID to internal database UUID
+      const userId = await resolveUserId(input.userId);
+
       // Store user message
       await db.insert(messagesTable).values({
-        userId: input.userId,
+        userId,
         role: "user",
         content: input.message,
       });
@@ -28,7 +32,7 @@ export const chatRouter = router({
       const history = await db
         .select()
         .from(messagesTable)
-        .where(eq(messagesTable.userId, input.userId))
+        .where(eq(messagesTable.userId, userId))
         .orderBy(desc(messagesTable.createdAt))
         .limit(15);
 
@@ -38,12 +42,12 @@ export const chatRouter = router({
       }));
 
       // Fetch upcoming Google Calendar events (best-effort)
-      const upcomingEvents = await getUpcomingEvents(input.userId);
+      const upcomingEvents = await getUpcomingEvents(userId);
 
       // Compute real domain health from life item activity
       let domainHealthMap: Record<string, string> = {};
       try {
-        const healthResults = await computeDomainHealth(input.userId);
+        const healthResults = await computeDomainHealth(userId);
         for (const h of healthResults) {
           domainHealthMap[h.domain] = h.status === "healthy" ? "active" : h.status;
         }
@@ -79,7 +83,7 @@ export const chatRouter = router({
       const toolResults = [];
       try {
         for (const toolCall of aiResponse.toolCalls) {
-          const result = await executeToolCall(toolCall, input.userId, db);
+          const result = await executeToolCall(toolCall, userId, db);
           toolResults.push(result);
         }
       } catch (err: unknown) {
@@ -90,7 +94,7 @@ export const chatRouter = router({
 
       // Store assistant response
       await db.insert(messagesTable).values({
-        userId: input.userId,
+        userId: userId,
         role: "assistant",
         content: aiResponse.text,
         toolCalls:
@@ -111,10 +115,11 @@ export const chatRouter = router({
       }),
     )
     .query(async ({ input }) => {
+      const internalUserId = await resolveUserId(input.userId);
       const history = await db
         .select()
         .from(messagesTable)
-        .where(eq(messagesTable.userId, input.userId))
+        .where(eq(messagesTable.userId, internalUserId))
         .orderBy(desc(messagesTable.createdAt))
         .limit(input.limit);
 
