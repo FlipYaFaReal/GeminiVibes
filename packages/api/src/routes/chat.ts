@@ -35,28 +35,45 @@ export const chatRouter = router({
         content: m.content,
       }));
 
-      // Call Claude
-      const aiResponse = await chat(conversationMessages, {
-        userName: "Paul", // TODO: fetch from user record
-        currentDateTime: new Date().toISOString(),
-        upcomingEvents: [], // TODO: fetch from calendar
-        recentNudges: [], // TODO: fetch recent nudges
-        domainHealth: {
-          family: "active",
-          work: "active",
-          home: "active",
-          relationships: "unknown",
-          faith: "unknown",
-          health: "unknown",
-          growth: "unknown",
-        },
-      });
+      // Call Claude and execute tool calls
+      let aiResponse;
+      try {
+        aiResponse = await chat(conversationMessages, {
+          userName: "Paul", // TODO: fetch from user record
+          currentDateTime: new Date().toISOString(),
+          upcomingEvents: [], // TODO: fetch from calendar
+          recentNudges: [], // TODO: fetch recent nudges
+          domainHealth: {
+            family: "active",
+            work: "active",
+            home: "active",
+            relationships: "unknown",
+            faith: "unknown",
+            health: "unknown",
+            growth: "unknown",
+          },
+        });
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Unknown AI service error";
+        return {
+          text: "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
+          toolResults: [],
+          error: message,
+        };
+      }
 
       // Execute any tool calls
       const toolResults = [];
-      for (const toolCall of aiResponse.toolCalls) {
-        const result = await executeToolCall(toolCall, input.userId, db);
-        toolResults.push(result);
+      try {
+        for (const toolCall of aiResponse.toolCalls) {
+          const result = await executeToolCall(toolCall, input.userId, db);
+          toolResults.push(result);
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Unknown tool execution error";
+        toolResults.push({ success: false, type: "execution", error: message });
       }
 
       // Store assistant response
