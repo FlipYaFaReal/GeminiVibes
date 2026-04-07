@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
+import { colors } from "@/lib/theme";
 
 interface ChatBubbleProps {
   role: "user" | "assistant";
@@ -30,12 +31,17 @@ const styles = StyleSheet.create({
   userContainer: { alignItems: "flex-end" },
   assistantContainer: { alignItems: "flex-start" },
   bubble: { maxWidth: "80%", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
-  userBubble: { backgroundColor: "#4F46E5", borderBottomRightRadius: 4 },
-  assistantBubble: { backgroundColor: "#F3F4F6", borderBottomLeftRadius: 4 },
+  userBubble: { backgroundColor: colors.userBubble, borderBottomRightRadius: 4 },
+  assistantBubble: {
+    backgroundColor: colors.aiBubbleBg,
+    borderBottomLeftRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.aiBubbleBorder,
+  },
   text: { fontSize: 16, lineHeight: 22 },
   userText: { color: "#FFFFFF" },
-  assistantText: { color: "#1F2937" },
-  timestamp: { fontSize: 11, marginTop: 2, color: "#9CA3AF" },
+  assistantText: { color: colors.textPrimary },
+  timestamp: { fontSize: 11, marginTop: 2, color: colors.textSecondary },
   userTimestamp: { marginRight: 4 },
   assistantTimestamp: { marginLeft: 4 },
 });

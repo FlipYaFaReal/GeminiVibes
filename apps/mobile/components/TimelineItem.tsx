@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { DomainBadge } from "./DomainBadge";
+import { colors } from "@/lib/theme";
 
 interface TimelineItemProps {
   time?: string;
@@ -30,11 +31,16 @@ export function TimelineItem({ time, title, domain, type, priority }: TimelineIt
 const styles = StyleSheet.create({
   container: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 12, paddingHorizontal: 16 },
   timeColumn: { width: 52, alignItems: "flex-end", paddingRight: 12 },
-  time: { fontSize: 13, color: "#6B7280", fontWeight: "500", fontVariant: ["tabular-nums"] },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#4F46E5", marginTop: 5, marginRight: 12 },
+  time: { fontSize: 13, color: colors.textSecondary, fontWeight: "500", fontVariant: ["tabular-nums"] },
+  dot: {
+    width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary,
+    marginTop: 5, marginRight: 12,
+    shadowColor: colors.primary, shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 },
+    elevation: 3,
+  },
   content: { flex: 1 },
-  title: { fontSize: 16, color: "#1F2937", fontWeight: "500", marginBottom: 4 },
-  highPriority: { color: "#DC2626" },
+  title: { fontSize: 16, color: colors.textPrimary, fontWeight: "500", marginBottom: 4 },
+  highPriority: { color: colors.danger },
   meta: { flexDirection: "row", alignItems: "center", gap: 8 },
-  type: { fontSize: 12, color: "#9CA3AF", textTransform: "capitalize" },
+  type: { fontSize: 12, color: colors.textMuted, textTransform: "capitalize" },
 });

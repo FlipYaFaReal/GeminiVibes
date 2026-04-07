@@ -11,6 +11,7 @@ import 'react-native-reanimated';
 import { ClerkProvider, useAuth } from '@clerk/clerk-react';
 import { useColorScheme } from '@/components/useColorScheme';
 import { trpc, createTRPCClient } from '@/lib/trpc';
+import { colors } from '@/lib/theme';
 
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
@@ -46,8 +47,8 @@ export default function RootLayout() {
 
   if (!CLERK_PUBLISHABLE_KEY) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "#6B7280", fontSize: 16 }}>Missing Clerk key</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+        <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Missing Clerk key</Text>
       </View>
     );
   }
@@ -78,8 +79,8 @@ function AuthGate() {
 
   if (!isLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

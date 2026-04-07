@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Act
 import { DomainCard } from "../../components/DomainCard";
 import { useAuth } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
+import { colors } from "@/lib/theme";
 
 const FALLBACK_DOMAINS = [
   { domain: "family", status: "unknown" as const, lastActivity: undefined, itemCount: 0, overdueCount: 0 },
@@ -44,7 +45,7 @@ export default function RadarScreen() {
         </View>
         {isLoading && (
           <View style={styles.loading}>
-            <ActivityIndicator size="large" color="#6B7280" />
+            <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Loading domain health...</Text>
           </View>
         )}
@@ -59,16 +60,16 @@ export default function RadarScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
   headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { fontSize: 28, fontWeight: "700", color: "#1F2937" },
-  signOutButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: "#F3F4F6" },
-  signOutText: { fontSize: 14, fontWeight: "600", color: "#EF4444" },
-  subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
+  title: { fontSize: 28, fontWeight: "700", color: colors.textPrimary },
+  signOutButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: colors.surfaceBright },
+  signOutText: { fontSize: 14, fontWeight: "600", color: colors.danger },
+  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   loading: { alignItems: "center", paddingVertical: 32 },
-  loadingText: { fontSize: 14, color: "#9CA3AF", marginTop: 8 },
+  loadingText: { fontSize: 14, color: colors.textSecondary, marginTop: 8 },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",

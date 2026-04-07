@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { TimelineItem } from "../../components/TimelineItem";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@clerk/clerk-react";
+import { colors } from "@/lib/theme";
 
 const MOCK_TODAY = [
   { time: "8:00", title: "Morning devotional", domain: "faith", type: "event" as const },
@@ -89,13 +90,13 @@ export default function TodayScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  greeting: { fontSize: 28, fontWeight: "700", color: "#1F2937" },
-  date: { fontSize: 16, color: "#6B7280", marginTop: 4 },
-  summary: { fontSize: 14, color: "#4F46E5", marginTop: 8, fontWeight: "500" },
+  header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: colors.surfaceBright },
+  greeting: { fontSize: 28, fontWeight: "700", color: colors.textPrimary },
+  date: { fontSize: 16, color: colors.textSecondary, marginTop: 4 },
+  summary: { fontSize: 14, color: colors.primary, marginTop: 8, fontWeight: "500" },
   timeline: { paddingVertical: 8 },
-  anytimeSection: { borderTopWidth: 1, borderTopColor: "#E5E7EB", paddingTop: 12, marginTop: 4 },
-  anytimeHeader: { fontSize: 14, fontWeight: "600", color: "#6B7280", paddingHorizontal: 20, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 },
+  anytimeSection: { borderTopWidth: 1, borderTopColor: colors.surfaceBright, paddingTop: 12, marginTop: 4 },
+  anytimeHeader: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, paddingHorizontal: 20, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 },
 });

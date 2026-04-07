@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
+import { colors } from "@/lib/theme";
 
 const DOMAIN_LABELS: Record<string, string> = {
   family: "Family",
@@ -35,22 +36,22 @@ export default function DomainDrilldown() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
   header: {
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.surfaceBright,
   },
-  title: { fontSize: 28, fontWeight: "700", color: "#1F2937", marginTop: 12 },
-  subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
+  title: { fontSize: 28, fontWeight: "700", color: colors.textPrimary, marginTop: 12 },
+  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   placeholder: {
     padding: 20,
     margin: 16,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.surface,
     borderRadius: 12,
   },
-  placeholderText: { fontSize: 15, color: "#6B7280", lineHeight: 22 },
+  placeholderText: { fontSize: 15, color: colors.textSecondary, lineHeight: 22 },
 });

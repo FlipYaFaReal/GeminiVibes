@@ -7,6 +7,7 @@ import { ChatBubble } from "@/components/ChatBubble";
 import { ChatInput } from "@/components/ChatInput";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@clerk/clerk-react";
+import { colors } from "@/lib/theme";
 
 interface Message {
   id: string;
@@ -21,7 +22,7 @@ export default function ChatScreen() {
     {
       id: "welcome",
       role: "assistant",
-      content: "Hey! I'm LifePulse, your personal life copilot. Tell me what's going on — I'll help you stay on top of things.",
+      content: "Hey \u2014 I'm your GeminiVibes copilot. Tell me what's happening in your world.",
       createdAt: new Date().toISOString(),
     },
   ]);
@@ -77,8 +78,8 @@ export default function ChatScreen() {
         keyboardVerticalOffset={90}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>LifePulse</Text>
-          <Text style={styles.headerSubtitle}>Your life copilot</Text>
+          <Text style={styles.headerTitle}>GeminiVibes</Text>
+          <Text style={styles.headerSubtitle}>Your cosmic life copilot</Text>
         </View>
 
         <FlatList
@@ -99,10 +100,10 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: colors.background },
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
-  headerTitle: { fontSize: 24, fontWeight: "700", color: "#1F2937" },
-  headerSubtitle: { fontSize: 14, color: "#6B7280", marginTop: 2 },
+  header: { paddingHorizontal: 20, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.surfaceBright },
+  headerTitle: { fontSize: 24, fontWeight: "700", color: colors.primary },
+  headerSubtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 2 },
   messageList: { paddingVertical: 12 },
 });
