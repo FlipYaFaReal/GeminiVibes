@@ -6,6 +6,7 @@ import {
 import { ChatBubble } from "@/components/ChatBubble";
 import { ChatInput } from "@/components/ChatInput";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/lib/AuthContext";
 
 interface Message {
   id: string;
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  const { userId } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -62,7 +64,7 @@ export default function ChatScreen() {
     setSending(true);
 
     sendMutation.mutate({
-      userId: "placeholder-user-id", // TODO: from auth context
+      userId: userId!,
       message: text,
     });
   }, [sendMutation]);

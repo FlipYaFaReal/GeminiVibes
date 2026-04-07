@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity } from "react-native";
 import { DomainCard } from "../../components/DomainCard";
+import { useAuth } from "@/lib/AuthContext";
 
 const MOCK_DOMAINS = [
   { domain: "family", status: "healthy" as const, lastActivity: "Today", itemCount: 12 },
@@ -12,6 +13,7 @@ const MOCK_DOMAINS = [
 ];
 
 export default function RadarScreen() {
+  const { signOut } = useAuth();
   const healthyCount = MOCK_DOMAINS.filter((d) => d.status === "healthy").length;
   const needsAttention = MOCK_DOMAINS.filter(
     (d) => d.status === "neglected" || d.status === "drifting"
@@ -21,7 +23,12 @@ export default function RadarScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Life Radar</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Life Radar</Text>
+            <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.subtitle}>
             {healthyCount} domains healthy — {needsAttention} need attention
           </Text>
@@ -40,7 +47,10 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#FFFFFF" },
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   title: { fontSize: 28, fontWeight: "700", color: "#1F2937" },
+  signOutButton: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: "#F3F4F6" },
+  signOutText: { fontSize: 14, fontWeight: "600", color: "#EF4444" },
   subtitle: { fontSize: 14, color: "#6B7280", marginTop: 4 },
   grid: {
     flexDirection: "row",

@@ -10,15 +10,14 @@ import {
 } from "react-native";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { useRouter } from "expo-router";
 
 import { trpc } from "@/lib/trpc";
-import { setToken } from "@/lib/auth";
+import { useAuth } from "@/lib/AuthContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SignInScreen() {
-  const router = useRouter();
+  const { signIn } = useAuth();
   const [signingIn, setSigningIn] = useState(false);
   const discovery = AuthSession.useAutoDiscovery("https://accounts.google.com");
 
@@ -58,8 +57,8 @@ export default function SignInScreen() {
     googleCallback
       .mutateAsync({ code, codeVerifier })
       .then(async (result) => {
-        await setToken(result.token);
-        router.replace("/(tabs)");
+        const payload = JSON.parse(atob(result.token.split(".")[1]));
+        await signIn(result.token, payload.userId);
       })
       .catch((err: unknown) => {
         const message =
