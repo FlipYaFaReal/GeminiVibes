@@ -2,6 +2,7 @@ import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { chat } from "../services/ai";
 import { executeToolCall } from "../services/tool-executor";
+import { getUpcomingEvents } from "../services/google-calendar";
 import { db } from "../db";
 import { messages as messagesTable } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -35,13 +36,16 @@ export const chatRouter = router({
         content: m.content,
       }));
 
+      // Fetch upcoming Google Calendar events (best-effort)
+      const upcomingEvents = await getUpcomingEvents(input.userId);
+
       // Call Claude and execute tool calls
       let aiResponse;
       try {
         aiResponse = await chat(conversationMessages, {
           userName: "Paul", // TODO: fetch from user record
           currentDateTime: new Date().toISOString(),
-          upcomingEvents: [], // TODO: fetch from calendar
+          upcomingEvents,
           recentNudges: [], // TODO: fetch recent nudges
           domainHealth: {
             family: "active",

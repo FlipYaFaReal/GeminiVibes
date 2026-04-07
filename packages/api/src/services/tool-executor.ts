@@ -1,6 +1,8 @@
 import type { ToolCall } from "./ai";
 import type { Database } from "../db";
 import { lifeItems, nudges, lifeDomainEnum } from "../db/schema";
+import { createCalendarEvent } from "./google-calendar";
+import { eq } from "drizzle-orm";
 
 type LifeDomain = (typeof lifeDomainEnum.enumValues)[number];
 
@@ -36,6 +38,25 @@ export async function executeToolCall(
             },
           })
           .returning();
+
+        // Push event to Google Calendar (best-effort — don't fail the tool call)
+        try {
+          const calendarEventId = await createCalendarEvent(userId, {
+            title: input.title as string,
+            start: input.start as string,
+            end: input.end as string | undefined,
+            location: input.location as string | undefined,
+          });
+          if (calendarEventId) {
+            await db
+              .update(lifeItems)
+              .set({ calendarEventId, updatedAt: new Date() })
+              .where(eq(lifeItems.id, item.id));
+          }
+        } catch (calErr) {
+          console.error("Google Calendar sync failed (non-blocking):", calErr);
+        }
+
         return { success: true, type: "event", id: item.id };
       } catch (err: unknown) {
         const message =
