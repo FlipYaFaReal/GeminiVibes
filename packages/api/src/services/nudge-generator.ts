@@ -4,6 +4,7 @@ import { lifeItems, nudges, lifeDomainEnum } from "../db/schema";
 import { eq, and, gte, lt, desc } from "drizzle-orm";
 import { computeDomainHealth } from "./domain-health";
 import { aiTools } from "./ai-tools";
+import { deliverNudgeNotification } from "./notification-delivery";
 
 type LifeDomain = (typeof lifeDomainEnum.enumValues)[number];
 
@@ -206,6 +207,11 @@ export async function generateNudges(userId: string): Promise<string[]> {
       .returning();
 
     createdIds.push(nudge.id);
+
+    // Deliver push notification immediately
+    deliverNudgeNotification(nudge.id, userId).catch((err) =>
+      console.error(`[nudge-generator] Failed to deliver notification for nudge ${nudge.id}:`, err),
+    );
   }
 
   return createdIds;

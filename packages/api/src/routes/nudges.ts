@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { db } from "../db";
-import { nudges } from "../db/schema";
+import { nudges, users } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 
 export const nudgesRouter = router({
@@ -38,5 +38,21 @@ export const nudgesRouter = router({
         priority: n.priority,
         createdAt: n.createdAt.toISOString(),
       }));
+    }),
+
+  /** Register or update the user's Expo push token for push notifications. */
+  registerPushToken: publicProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        pushToken: z.string(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await db
+        .update(users)
+        .set({ pushToken: input.pushToken, updatedAt: new Date() })
+        .where(eq(users.id, input.userId));
+      return { success: true };
     }),
 });

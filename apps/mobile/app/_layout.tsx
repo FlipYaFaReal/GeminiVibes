@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
+import type { EventSubscription } from 'expo-modules-core';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { trpc, trpcClient } from '@/lib/trpc';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { registerForPushNotifications } from '@/lib/notifications';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -50,10 +53,13 @@ export default function RootLayout() {
 }
 
 function AuthGate() {
-  const { token, isLoading } = useAuth();
+  const { token, userId, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const notificationResponseListener = useRef<EventSubscription | null>(null);
+  const registerPushToken = trpc.nudges.registerPushToken.useMutation();
 
+  // Auth-based routing
   useEffect(() => {
     if (isLoading) return;
 
@@ -65,6 +71,36 @@ function AuthGate() {
       router.replace("/(tabs)");
     }
   }, [token, isLoading, segments]);
+
+  // Register for push notifications once authenticated
+  useEffect(() => {
+    if (!token || !userId) return;
+
+    registerForPushNotifications().then((pushToken) => {
+      if (pushToken) {
+        registerPushToken.mutate({ userId, pushToken });
+      }
+    });
+  }, [token, userId]);
+
+  // Handle notification taps to navigate to the relevant screen
+  useEffect(() => {
+    notificationResponseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data as {
+          domain?: string;
+          nudgeId?: string;
+          type?: string;
+        };
+        if (data.domain) {
+          router.push(`/domain/${data.domain}`);
+        }
+      });
+
+    return () => {
+      notificationResponseListener.current?.remove();
+    };
+  }, []);
 
   if (isLoading) {
     return (
