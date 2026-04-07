@@ -31,6 +31,7 @@ jobs:
         run: |
           cd apps/mobile
           npx expo export --platform web
+          cp public/staticwebapp.config.json dist/staticwebapp.config.json 2>/dev/null || true
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
